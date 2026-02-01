@@ -1,0 +1,127 @@
+MySQL coding analysing NBA player injuries between 2010-2020 
+
+select* 
+From world.`injuries_2010-2020`;
+
+select count(*) As total_injuries
+From world.`injuries_2010-2020`;
+
+-- Average Injury
+SELECT 
+    YEAR(Date) AS year,
+    COUNT(*) AS injuries_per_year
+FROM world.`injuries_2010-2020`
+GROUP BY YEAR(Date)
+ORDER BY year;
+
+SELECT 
+    AVG(injuries_per_year) AS avg_injuries_per_year
+FROM (
+    SELECT 
+        YEAR(Date) AS year,
+        COUNT(*) AS injuries_per_year
+    FROM world.`injuries_2010-2020`
+    GROUP BY YEAR(Date)
+) yearly_counts;
+
+select
+year(Date) As season,
+count(*) as injury_count
+From world.`injuries_2010-2020`
+group by YEAR(Date)
+order by season;
+
+select Team,
+count(*) As injuries
+From world.`injuries_2010-2020`
+group by Team
+order by injuries desc
+limit 10;
+
+-- Injury Tredn by month
+
+select
+Month(Date) as month,
+count(*) as injuries
+From world.`injuries_2010-2020`
+group by month(date)
+order by month;
+
+-- Top 10 most injured players
+
+select
+Relinquished as player,
+count(*) as injuries
+From world.`injuries_2010-2020`
+group by Relinquished
+order by injuries desc
+limit 10;
+
+-- Team with the most ACL injuries
+
+select Team,
+count(*) as acl_injuries
+From world.`injuries_2010-2020`
+where Notes Like '%acl%'
+group by Team
+order by acl_injuries DESc
+limit 5;
+
+-- Year-over-year injury growth
+SELECT
+    year,
+    injuries,
+    injuries - LAG(injuries) OVER (ORDER BY year) AS yoy_change
+FROM (
+    SELECT
+        YEAR(Date) AS year,
+        COUNT(*) AS injuries
+    FROM world.`injuries_2010-2020`
+    GROUP BY YEAR(Date)
+) yearly;
+
+
+-- injury spike month of the year
+
+SELECT
+    YEAR(Date) AS year,
+    MONTH(Date) AS month,
+    COUNT(*) AS injuries
+FROM world.`injuries_2010-2020`
+GROUP BY YEAR(Date), MONTH(Date)
+HAVING COUNT(*) > (
+    SELECT AVG(monthly_count)
+    FROM (
+        SELECT COUNT(*) AS monthly_count
+        FROM world.`injuries_2010-2020`
+        GROUP BY YEAR(Date), MONTH(Date)
+    ) avg_table
+)
+ORDER BY injuries DESC;
+
+-- Injury Types
+
+SELECT
+    CASE
+        WHEN Notes LIKE '%acl%' THEN 'ACL'
+        WHEN Notes LIKE '%achilles%' THEN 'ACHILLES'
+        WHEN Notes LIKE '%ankle%' THEN 'ANKLE'
+        WHEN Notes LIKE '%knee%' THEN 'KNEE'
+        WHEN Notes LIKE '%hamstring%' THEN 'HAMSTRING'
+        WHEN Notes LIKE '%back%' THEN 'BACK'
+        ELSE 'OTHER'
+    END AS Injury_Type,
+    COUNT(*) AS injuries
+FROM world.`injuries_2010-2020`
+GROUP BY Injury_Type
+ORDER BY injuries DESC;
+
+-- Most Injuty Type
+
+select Team,
+count(*) as acl_injuries
+From world.`injuries_2010-2020`
+where Notes Like '%knee%'
+group by Team
+order by acl_injuries DESc
+limit 5;
